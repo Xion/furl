@@ -18,7 +18,7 @@ from six.moves import urllib
 import furl
 from furl.compat import unittest
 from furl.omdict1D import omdict1D
-from furl.compat import OrderedDict as odict
+from furl.compat import basestring, OrderedDict as odict
 
 PYTHON_27PLUS = sys.version_info[0] >= 2 and sys.version_info[1] >= 7
 
@@ -580,6 +580,16 @@ class TestQuery(unittest.TestCase):
                     runningsum.append(item)
                 assert q.params.allitems() == runningsum
 
+        for items in self.items:
+            q = furl.Query(items.original())
+            runningsum = list(items.allitems())
+            for itemupdate in self.itemdicts:
+                if self._all_string_keys(itemupdate):
+                    assert q.add(**itemupdate.original()) == q
+                    for item in itemupdate.iterallitems():
+                        runningsum.append(item)
+                    assert q.params.allitems() == runningsum
+
     def test_set(self):
         for items in self.items:
             q = furl.Query(items.original())
@@ -588,6 +598,15 @@ class TestQuery(unittest.TestCase):
                 q.set(update)
                 items_omd.updateall(update)
                 assert q.params.allitems() == items_omd.allitems()
+
+        for items in self.items:
+            q = furl.Query(items.original())
+            items_omd = omdict1D(items.allitems())
+            for update in self.itemdicts:
+                if self._all_string_keys(update):
+                    q.set(**update)
+                    items_omd.updateall(update)
+                    assert q.params.allitems() == items_omd.allitems()
 
         # The examples.
         q = furl.Query({1: 1}).set([(1, None), (2, 2)])
@@ -752,6 +771,9 @@ class TestQuery(unittest.TestCase):
                     urllib.parse.quote_plus(str(value), "/?:@-._~!$'()*,;="))
             allitems_quoted.append(pair)
         return allitems_quoted
+
+    def _all_string_keys(self, items):
+        return all(isinstance(key, basestring) for key in items.iterkeys())
 
 
 class TestQueryCompositionInterface(unittest.TestCase):

@@ -61,7 +61,7 @@ COLON_SEPARATED_SCHEMES = [
 def non_text_iterable(value):
     b = callable_attr(value, '__iter__') and not isinstance(value, basestring)
     return b
-        
+
 
 
 class Path(object):
@@ -447,16 +447,19 @@ class Query(object):
         self.params.load(self._items(query))
         return self
 
-    def add(self, args):
+    def add(self, args=(), **kwargs):
         for param, value in self._items(args):
+            self.params.add(param, value)
+        for param, value in self._items(kwargs):
             self.params.add(param, value)
         return self
 
-    def set(self, mapping):
+    def set(self, mapping=(), **kwargs):
         """
-        Adopt all mappings in <mapping>, replacing any existing mappings
-        with the same key. If a key has multiple values in <mapping>,
-        they are all adopted.
+        Adopt all mappings from <mapping> and keyword arguments,
+        replacing any existing mappings with the same key.
+        If a key has multiple values given in <mapping> and/or
+        keyword arguments, they are all adopted.
 
         Examples:
           Query({1:1}).set([(1,None),(2,2)]).params.allitems()
@@ -468,7 +471,7 @@ class Query(object):
 
         Returns: <self>.
         """
-        self.params.updateall(mapping)
+        self.params.updateall(mapping, kwargs)
         return self
 
     def remove(self, query):
